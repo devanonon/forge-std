@@ -12,6 +12,10 @@ abstract contract Script {
 
     Vm public constant vm = Vm(VM_ADDRESS);
 
+    /*//////////////////////////////////////////////////////////////////////////
+                                    STD-UTILS
+    //////////////////////////////////////////////////////////////////////////*/
+
     /// @dev Compute the address a contract will be deployed at for a given deployer address and nonce
     /// @notice adapated from Solmate implementation (https://github.com/transmissions11/solmate/blob/main/src/utils/LibRLP.sol)
     function computeCreateAddress(address deployer, uint256 nonce) internal pure returns (address) {
@@ -35,5 +39,42 @@ abstract contract Script {
 
     function addressFromLast20Bytes(bytes32 bytesValue) internal pure returns (address) {
         return address(uint160(uint256(bytesValue)));
+    }
+
+    function runScript(address scriptAddress, bytes memory run) internal returns (bytes memory data) {
+        require(
+            scriptAddress != address(0),
+            "Script runScript(address,bytes): Cannot run against 0 address."
+        );
+
+        // Allow setUp() to fail in case it does not exist
+        (bool success, ) = scriptAddress.call(abi.encodeWithSignature("setUp()"));
+
+        // Ensure that run() succeeds and return the data
+        (success, data) = scriptAddress.call(run);
+        require(success, "Script runScript(address,bytes): call to run() or custom run failed in script.");
+    }
+
+    function runScript(string memory what, bytes memory run) internal returns (bytes memory data) {
+        address scriptAddress;
+        bytes memory bytecode = vm.getCode(what);
+        /// @solidity memory-safe-assembly
+        assembly {
+            scriptAddress := create(0, add(bytecode, 0x20), mload(bytecode))
+        }
+
+        return runScript(scriptAddress, run);
+    }
+
+    function runScript(string memory what) internal returns (bytes memory data) {
+        return runScript(what, abi.encodeWithSignature("run()"));
+    }
+
+    function runScript(Script script, bytes memory run) internal returns (bytes memory data) {
+        return runScript(address(script), run);
+    }
+
+    function runScript(Script script) internal returns (bytes memory data) {
+        return runScript(address(script), abi.encodeWithSignature("run()"));
     }
 }

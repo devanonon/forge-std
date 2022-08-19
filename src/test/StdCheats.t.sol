@@ -193,22 +193,6 @@ contract StdCheatsTest is Test {
             extcodecopy(who, add(o_code, 0x20), 0, size)
         }
     }
-
-    function testRunScriptWithSetup() public {
-        runScript("StdCheats.t.sol:ScriptWithSetup");
-        assertTrue(vm.envBool("SCRIPT_SETUP_CALLED"));
-        assertTrue(vm.envBool("SCRIPT_RUN_CALLED"));
-    }
-
-    function testRunScriptWithoutSetup() public {
-        runScript("StdCheats.t.sol:ScriptWithoutSetup");
-        assertTrue(vm.envBool("SCRIPT_RUN_CALLED"));
-    }
-
-    function testRunReturnsData() public {
-        bytes memory data = runScript("StdCheats.t.sol:ScriptRunReturnsData");
-        assertEq(abi.decode(data, (uint256)), 1);
-    }
 }
 
 contract Bar {
@@ -239,27 +223,5 @@ contract Bar {
 contract RevertingContract {
     constructor() {
         revert();
-    }
-}
-
-contract ScriptWithSetup is Script {
-    function setUp() public {
-        vm.setEnv("SCRIPT_SETUP_CALLED", "true");
-    }
-
-    function run() public {
-        vm.setEnv("SCRIPT_RUN_CALLED", "true");
-    }
-}
-
-contract ScriptWithoutSetup is Script {
-    function run() public {
-        vm.setEnv("SCRIPT_RUN_CALLED", "true");
-    }
-}
-
-contract ScriptRunReturnsData is Script {
-    function run() public returns (uint256) {
-        return 1;
     }
 }

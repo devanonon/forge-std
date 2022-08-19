@@ -239,17 +239,6 @@ abstract contract Test is DSTest, Script {
         );
     }
 
-    function runScript(string memory what) internal returns (bytes memory data) {
-        address scriptAddress = deployCode(what);
-    
-        // Allow setUp() to fail in case it does not exist
-        (bool success, ) = scriptAddress.call(abi.encodeWithSignature("setUp()"));
-
-        // Ensure that run() succeeds and return the data
-        (success, data) = scriptAddress.call(abi.encodeWithSignature("run()"));
-        require(success, "Test runScript(string): call to run() failed in script.");
-    }
-
     /*//////////////////////////////////////////////////////////////////////////
                                     STD-ASSERTIONS
     //////////////////////////////////////////////////////////////////////////*/
